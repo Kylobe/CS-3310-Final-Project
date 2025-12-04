@@ -9,11 +9,9 @@ def exact_mis(graph):
     checks if the subset is an independent set, if it is, it becomes
     the new largest independent set.
     """
-    largest_mis = {}
     for subset in all_subsets(graph):
-        if len(subset) > len(largest_mis) and is_independent_set(subset):
-            largest_mis = subset
-    return largest_mis
+        if is_independent_set(subset):
+            return subset
 
 
 def is_independent_set(subset):
@@ -35,7 +33,7 @@ def all_subsets(graph):
     returned sub graph also follows the same architecture.
     """
     keys = list(graph.keys())
-    for r in range(len(keys) + 1):
+    for r in range(len(keys), 0, -1):
         for combo in itertools.combinations(keys, r):
             yield {key: graph[key] for key in combo}
 
