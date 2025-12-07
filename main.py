@@ -1,7 +1,9 @@
-from mis_functions import exact_mis, greedy_mis, random_mis
-from data_gen import generate_graph, write_graph, read_graph
-import time as t
+import csv
 import random
+import time as t
+from mis_functions import exact_mis, greedy_mis, random_improve
+from data_gen import generate_graph
+
 
 def find_time(func, graph):
     start = t.perf_counter()
@@ -9,59 +11,91 @@ def find_time(func, graph):
     end = t.perf_counter()
     return end - start, mis
 
+
+def find_avg(lyst):
+    return sum(lyst) / len(lyst)
+
+
 def test_time_metrics(n, e):
-    
+    """
+    Runs exact, greedy, and random MIS 5 times on fresh graphs with n vertices, e edges.
+    Returns a single 'pivot' row:
+
+    (n, e,
+     exact_avg_time, exact_size,
+     greedy_avg_time, greedy_size,
+     random_avg_time, random_size)
+    """
+
     exact_times = []
     greedy_times = []
     random_times = []
+
+    exact_size = None
+    greedy_size = None
+    random_size = None
+
     for _ in range(5):
         graph = generate_graph(n, e)
+
         exact_time, exact = find_time(exact_mis, graph)
         exact_times.append(exact_time)
+        exact_size = len(exact)
+
         greedy_time, greedy = find_time(greedy_mis, graph)
         greedy_times.append(greedy_time)
-        random_time, rand = find_time(random_mis, graph)
+        greedy_size = len(greedy)
+
+        random_time, rand = find_time(random_improve, graph)
         random_times.append(random_time)
-    print(f"For a graph with {n} vertices, and {e} edges, exact finished with an average time of {find_avg(exact_times)}, and a size of {len(exact)}")
-    print(f"For a graph with {n} vertices, and {e} edges, greedy finished with an average time of {find_avg(greedy_times)}, and a size of {len(greedy)}")
-    print(f"For a graph with {n} vertices, and {e} edges, random finished with an average time of {find_avg(random_times)}, and a size of {len(rand)}")
+        random_size = len(rand)
 
-def find_avg(lyst):
-    total = 0
-    for item in lyst:
-        total += item
-    return total / len(lyst)
+    exact_avg = round(find_avg(exact_times), 5)
+    greedy_avg = round(find_avg(greedy_times), 5)
+    random_avg = round(find_avg(random_times), 5)
 
+    print(f"For a graph with {n} vertices, and {e} edges, exact finished with an average time of {exact_avg}, and a size of {exact_size}")
+    print(f"For a graph with {n} vertices, and {e} edges, greedy finished with an average time of {greedy_avg}, and a size of {greedy_size}")
+    print(f"For a graph with {n} vertices, and {e} edges, random finished with an average time of {random_avg}, and a size of {random_size}")
+
+    return (
+        n,
+        e,
+        exact_avg,
+        exact_size,
+        greedy_avg,
+        greedy_size,
+        random_avg,
+        random_size,
+    )
 
 
 def main():
-    """
-    my_dict = {
-                "1": set(["2", "4"]),
-                "2": set(["1", "5", "3"]),
-                "3": set(["2", "6"]),
-                "4": set(["1", "5", "7"]),
-                "5": set(["2", "4", "6", "8"]),
-                "6": set(["3", "5", "9"]),
-                "7": set(["4", "8"]),
-                "8": set(["7", "5", "9"]),
-                "9": set(["8", "6"])
-            }
-    mis = exact_mis(my_dict)
-    greed_mis = greedy_mis(my_dict)
-    print(mis)
-    print(greed_mis)
-    """
     random.seed(42)
-    test_time_metrics(25, 60)
+    all_rows = []
+
+    for n in range(5, 26, 5):
+        e = 2 * n
+        row = test_time_metrics(n, e)
+        all_rows.append(row)
+
+    # Write pivot-style CSV
+    with open("mis_results.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "vertices",
+            "edges",
+            "exact_time",
+            "exact_size",
+            "greedy_time",
+            "greedy_size",
+            "random_time",
+            "random_size",
+        ])
+        writer.writerows(all_rows)
+
+    print("\nCSV file 'mis_pivot_results.csv' written successfully!")
 
 
-    approx_mis = greedy_mis(my_dict)
-    random_improve_mis = random_improve(my_dict)
-    print(f"Exact MIS cardinality: {len(mis)}\n\t{mis}\n")
-    print(f"Approximation MIS cardinality: {len(approx_mis)}\n\t{approx_mis}\n")
-    print(f"Random Improve MIS cardinality: {len(random_improve_mis)}\n\t{random_improve_mis}\n")
-    
 if __name__ == "__main__":
     main()
-

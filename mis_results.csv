@@ -1,0 +1,6 @@
+vertices,edges,exact_time,exact_size,greedy_time,greedy_size,random_time,random_size
+5,10,1e-05,1,0.0,1,1e-05,1
+10,20,0.00025,5,1e-05,5,3e-05,4
+15,30,0.0082,6,3e-05,6,5e-05,5
+20,40,0.27488,9,6e-05,9,7e-05,7
+25,50,12.44499,10,7e-05,10,8e-05,10
