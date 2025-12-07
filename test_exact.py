@@ -1,4 +1,4 @@
-from exact_mis import exact_mis
+from mis_functions import exact_mis
 import pytest
 
 @pytest.mark.parametrize(
