@@ -5,7 +5,7 @@ import random
 def generate_graph(n, e):
     if n <= 1:
         raise ValueError
-    if e >= n * (n - 1):
+    if e > n * (n - 1) // 2:
         raise ValueError
     graph = {}
     nodes = list([i for i in range(n)])

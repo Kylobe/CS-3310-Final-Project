@@ -44,7 +44,7 @@ def random_mis(graph: dict):
 
     while remaining:
 
-        chosen_node = random.choice(remaining)
+        chosen_node = random.choice(tuple(remaining))
 
         # add to MIS
         mis_nodes.add(chosen_node)
