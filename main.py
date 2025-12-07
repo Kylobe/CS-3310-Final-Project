@@ -56,6 +56,12 @@ def main():
     test_time_metrics(25, 60)
 
 
+    approx_mis = greedy_mis(my_dict)
+    random_improve_mis = random_improve(my_dict)
+    print(f"Exact MIS cardinality: {len(mis)}\n\t{mis}\n")
+    print(f"Approximation MIS cardinality: {len(approx_mis)}\n\t{approx_mis}\n")
+    print(f"Random Improve MIS cardinality: {len(random_improve_mis)}\n\t{random_improve_mis}\n")
+    
 if __name__ == "__main__":
     main()
 
