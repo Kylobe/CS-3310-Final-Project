@@ -4,6 +4,52 @@ import time as t
 from mis_functions import exact_mis, greedy_mis, random_improve, greedy_minor_optim, recursive_mis, greedy_with_exact
 from data_gen import generate_graph
 import sys
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+def plot_mis_times(csv_file="mis_results.csv"):
+    """
+    Reads the pivot CSV produced by MIS experiments and plots
+    the runtime of each algorithm vs. number of vertices.
+    """
+
+    # Load CSV
+    df = pd.read_csv(csv_file)
+
+    # Keep only rows where timing exists
+    # (exact_time is None for large graphs)
+    x = df["vertices"]
+
+    # Build plot
+    plt.figure(figsize=(12, 7))
+
+    # Only plot exact where it exists
+    plt.plot(x, df["exact_time"], marker="o", label="Exact MIS")
+
+    plt.plot(x, df["greedy_time"], marker="o", label="Greedy MIS")
+    plt.plot(x, df["random_time"], marker="o", label="Random Improve")
+    plt.plot(x, df["greedy_local_improve_time"], marker="o",
+             label="Greedy Local Improve")
+    plt.plot(x, df["greedy_brute_force_time"], marker="o",
+             label="Greedy + Exact Improve")
+    plt.plot(x, df["recursive_time"], marker="o",
+             label="Recursive MIS")
+
+    # Labels and title
+    plt.xlabel("Number of Vertices (n)", fontsize=14)
+    plt.ylabel("Average Time (seconds)", fontsize=14)
+    plt.title("MIS Algorithm Runtime Comparison", fontsize=16)
+
+    # Log-scale Y axis if needed (useful when Exact blows up)
+    plt.yscale('log')
+
+    plt.grid(True, which="both", linestyle="--", alpha=0.5)
+    plt.legend()
+    plt.tight_layout()
+
+    plt.savefig("time_plot.png")
+    plt.close()
 
 
 def find_time(func, graph):
@@ -137,6 +183,8 @@ def main():
         writer.writerows(all_rows)
 
     print("\nCSV file 'mis_pivot_results.csv' written successfully!")
+    plot_mis_times()
+    
 
 
 if __name__ == "__main__":
