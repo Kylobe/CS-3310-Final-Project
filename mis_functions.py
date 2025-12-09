@@ -63,6 +63,59 @@ def greedy_mis(graph: dict):
     # if you really want the MIS as a "subgraph dict"
     return {node: graph[node] for node in mis_nodes}
 
+def greedy_minor_optim(graph: Mapping[int, Iterable[int]]) -> Dict[int, Iterable[int]]:
+    # graph: dict[node, list_of_neighbors]
+    remaining = set(graph.keys())
+    mis_nodes = set()
+
+    while remaining:
+        # choose node with minimum degree *within remaining*
+        def degree_in_remaining(u):
+            return sum(1 for v in graph[u] if v in remaining)
+
+        if len(remaining) <= 25:
+            mis_nodes = mis_nodes | set(exact_mis({ key: graph[key] for key in remaining }).keys())
+        least_node = min(remaining, key=degree_in_remaining)
+
+        # add to MIS
+        mis_nodes.add(least_node)
+
+        # remove it and its neighbors from remaining
+        remaining.remove(least_node)
+        for neighbor in graph[least_node]:
+            remaining.discard(neighbor)
+
+    local_improve(mis_nodes, graph)
+    return {node: graph[node] for node in mis_nodes}
+
+def local_improve(independent_set: set[int], graph: Mapping[int, Iterable[int]]):
+    improved = True
+    while improved:
+        improved = False
+        for v in list(independent_set):
+            neighbors = set(graph[v])
+            # Only consider pairs of neighbors not already in the independent set
+            neighbor_pairs = [(u, w) for u in neighbors for w in neighbors if u < w]
+            for u, w in neighbor_pairs:
+                if u in independent_set or w in independent_set:
+                    continue
+                # Check if u and w are not adjacent to any other included vertex (except v)
+                if any(x in independent_set and x != v for x in graph[u]):
+                    continue
+                if any(x in independent_set and x != v for x in graph[w]):
+                    continue
+                # Check u and w are not neighbors of each other
+                if w in graph[u] or u in graph[w]:
+                    continue
+                # If all checks pass, perform the swap
+                independent_set.remove(v)
+                independent_set.add(u)
+                independent_set.add(w)
+                improved = True
+                break
+            if improved:
+                break
+
 def random_improve(graph: Mapping[str, Iterable[str]]) -> Dict[str, Iterable[str]]:
     included = set()
     candidates = set(graph.keys())
@@ -77,35 +130,7 @@ def random_improve(graph: Mapping[str, Iterable[str]]) -> Dict[str, Iterable[str
         for neigh in graph[v]:
             candidates.discard(neigh)
 
-    # Local improvement: try to swap out vertices for pairs of their neighbors
-    improved = True
-    while improved:
-        improved = False
-        for v in list(included):
-            neighbors = set(graph[v])
-            # Only consider pairs of neighbors not already in the independent set
-            neighbor_pairs = [(u, w) for u in neighbors for w in neighbors if u < w]
-            for u, w in neighbor_pairs:
-                if u in included or w in included:
-                    continue
-                # Check if u and w are not adjacent to any other included vertex (except v)
-                if any(x in included and x != v for x in graph[u]):
-                    continue
-                if any(x in included and x != v for x in graph[w]):
-                    continue
-                # Check u and w are not neighbors of each other
-                if w in graph[u] or u in graph[w]:
-                    continue
-                # If all checks pass, perform the swap
-                included.remove(v)
-                included.add(u)
-                included.add(w)
-                improved = True
-                break
-            if improved:
-                break
-
-    # Return the induced subgraph on the independent set
+    local_improve(included, graph)
     return {node: graph[node] for node in included}
 
 def merge_independent_sets(left_mis: set[int],
