@@ -51,6 +51,42 @@ def plot_mis_times(csv_file="mis_results.csv"):
     plt.savefig("time_plot.png")
     plt.close()
 
+def plot_mis_sizes(csv_file="mis_results.csv"):
+    """
+    Reads the pivot CSV produced by MIS experiments and plots
+    the size of the MIS found by each algorithm vs. number of vertices.
+    """
+
+    # Load CSV
+    df = pd.read_csv(csv_file)
+
+    x = df["vertices"]
+
+    plt.figure(figsize=(12, 7))
+
+    # Only plot exact where it exists (small n)
+    plt.plot(x, df["exact_size"], marker="o", label="Exact MIS")
+
+    plt.plot(x, df["greedy_size"], marker="o", label="Greedy MIS")
+    plt.plot(x, df["random_size"], marker="o", label="Random Improve")
+    plt.plot(x, df["greedy_local_improve_size"], marker="o",
+             label="Greedy Local Improve")
+    plt.plot(x, df["greedy_brute_force_size"], marker="o",
+             label="Greedy + Exact Improve")
+    plt.plot(x, df["recursive_size"], marker="o",
+             label="Recursive MIS")
+
+    plt.xlabel("Number of Vertices (n)", fontsize=14)
+    plt.ylabel("MIS Size (|S|)", fontsize=14)
+    plt.title("MIS Algorithm Solution Size Comparison", fontsize=16)
+
+    plt.grid(True, linestyle="--", alpha=0.5)
+    plt.legend()
+    plt.tight_layout()
+
+    plt.savefig("size_plot.png")
+    plt.close()
+
 
 def find_time(func, graph):
     start = t.perf_counter()
@@ -160,6 +196,10 @@ def main():
         e = 2 * n
         row = test_time_metrics(n, e)
         all_rows.append(row)
+    n = 5120
+    e = 2 * n
+    row = test_time_metrics(n, e)
+    all_rows.append(row)
 
     # Write pivot-style CSV
     with open("mis_results.csv", "w", newline="") as f:
@@ -183,9 +223,11 @@ def main():
         writer.writerows(all_rows)
 
     print("\nCSV file 'mis_pivot_results.csv' written successfully!")
-    plot_mis_times()
+    
     
 
 
 if __name__ == "__main__":
     main()
+    plot_mis_times()
+    plot_mis_sizes()
