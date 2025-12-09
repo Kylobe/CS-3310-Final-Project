@@ -108,3 +108,73 @@ def random_improve(graph: Mapping[str, Iterable[str]]) -> Dict[str, Iterable[str
     # Return the induced subgraph on the independent set
     return {node: graph[node] for node in included}
 
+def merge_independent_sets(left_mis: set[int],
+                           right_mis: set[int],
+                           true_graph: Mapping[int, set[int]]) -> set[int]:
+    """
+    Merge two independent sets into a larger independent set.
+    If a conflict occurs, drop the higher-degree vertex (in true_graph).
+    """
+    merged = set(left_mis) | set(right_mis)
+
+    changed = True
+    while changed:
+        changed = False
+        for v in list(merged):
+            for u in true_graph[v]:
+                if u in merged and u != v:
+                    # break the conflict: keep the lower-degree vertex
+                    if len(true_graph[v]) > len(true_graph[u]):
+                        merged.remove(v)
+                    else:
+                        merged.remove(u)
+                    changed = True
+                    break
+            if changed:
+                break
+
+    return merged
+
+
+def recursive_mis(graph: Mapping[int, set[int]],
+                  true_graph: Mapping[int, set[int]]) -> set[int]:
+    """
+    Recursive MIS heuristic:
+    - Split the vertex set into two halves
+    - Build induced subgraphs on each half
+    - Recurse on each side
+    - Solve small subgraphs exactly
+    - Merge the resulting independent sets
+    """
+    n = len(graph)
+    if n == 0:
+        return set()
+    if n <= 20:
+        vertices = set(graph.keys())
+        induced = {
+            v: {u for u in true_graph[v] if u in vertices}
+            for v in vertices
+        }
+        return exact_mis(induced)
+
+    nodes = list(graph.keys())
+    left_nodes  = set(nodes[len(nodes)//2:])
+    right_nodes = set(nodes[:len(nodes)//2])
+
+    # Build induced subgraphs on each side
+    left_graph = {
+        v: {u for u in graph[v] if u in left_nodes}
+        for v in left_nodes
+    }
+    right_graph = {
+        v: {u for u in graph[v] if u in right_nodes}
+        for v in right_nodes
+    }
+
+    # Recurse
+    left_mis = recursive_mis(left_graph, true_graph)
+    right_mis = recursive_mis(right_graph, true_graph)
+
+    # Merge the two independent sets
+    merged = merge_independent_sets(set(left_mis.keys()), set(right_mis.keys()), true_graph)
+    return { key: graph[key] for key in merged }

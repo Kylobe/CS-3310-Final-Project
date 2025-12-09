@@ -7,7 +7,7 @@ def generate_graph(n, e):
         raise ValueError
     if e > n * (n - 1) // 2:
         raise ValueError
-    graph = {}
+    graph = { key: set() for key in range(n)}
     nodes = list([i for i in range(n)])
     for _ in range(e):
         first_node = random.choice(nodes)
