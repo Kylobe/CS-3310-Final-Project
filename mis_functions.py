@@ -73,8 +73,6 @@ def greedy_minor_optim(graph: Mapping[int, Iterable[int]]) -> Dict[int, Iterable
         def degree_in_remaining(u):
             return sum(1 for v in graph[u] if v in remaining)
 
-        if len(remaining) <= 25:
-            mis_nodes = mis_nodes | set(exact_mis({ key: graph[key] for key in remaining }).keys())
         least_node = min(remaining, key=degree_in_remaining)
 
         # add to MIS
@@ -86,6 +84,33 @@ def greedy_minor_optim(graph: Mapping[int, Iterable[int]]) -> Dict[int, Iterable
             remaining.discard(neighbor)
 
     local_improve(mis_nodes, graph)
+    return {node: graph[node] for node in mis_nodes}
+
+def greedy_with_exact(graph: Mapping[int, Iterable[int]]) -> Dict[int, Iterable[int]]:
+    # graph: dict[node, list_of_neighbors]
+    remaining = set(graph.keys())
+    mis_nodes = set()
+
+    while remaining:
+        # choose node with minimum degree *within remaining*
+        def degree_in_remaining(u):
+            return sum(1 for v in graph[u] if v in remaining)
+
+        if len(remaining) <= 20:
+            new_graph = { key: graph[key] for key in remaining }
+            last_remaining = set(exact_mis(new_graph).keys())
+            mis_nodes = mis_nodes | last_remaining
+            break
+        least_node = min(remaining, key=degree_in_remaining)
+
+        # add to MIS
+        mis_nodes.add(least_node)
+
+        # remove it and its neighbors from remaining
+        remaining.remove(least_node)
+        for neighbor in graph[least_node]:
+            remaining.discard(neighbor)
+
     return {node: graph[node] for node in mis_nodes}
 
 def local_improve(independent_set: set[int], graph: Mapping[int, Iterable[int]]):
@@ -161,8 +186,11 @@ def merge_independent_sets(left_mis: set[int],
     return merged
 
 
-def recursive_mis(graph: Mapping[int, set[int]],
-                  true_graph: Mapping[int, set[int]]) -> set[int]:
+def recursive_mis(graph: Mapping[int, set[int]]) ->  Mapping[int, set[int]]:
+    return recur_step(graph, graph)
+
+
+def recur_step(graph: Mapping[int, set[int]], true_graph: Mapping[int, set[int]]):
     """
     Recursive MIS heuristic:
     - Split the vertex set into two halves
@@ -197,8 +225,8 @@ def recursive_mis(graph: Mapping[int, set[int]],
     }
 
     # Recurse
-    left_mis = recursive_mis(left_graph, true_graph)
-    right_mis = recursive_mis(right_graph, true_graph)
+    left_mis = recur_step(left_graph, true_graph)
+    right_mis = recur_step(right_graph, true_graph)
 
     # Merge the two independent sets
     merged = merge_independent_sets(set(left_mis.keys()), set(right_mis.keys()), true_graph)
