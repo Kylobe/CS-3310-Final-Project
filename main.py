@@ -64,9 +64,6 @@ def plot_mis_sizes(csv_file="mis_results.csv"):
 
     plt.figure(figsize=(12, 7))
 
-    # Only plot exact where it exists (small n)
-    plt.plot(x, df["exact_size"], marker="o", label="Exact MIS")
-
     plt.plot(x, df["greedy_size"], marker="o", label="Greedy MIS")
     plt.plot(x, df["random_size"], marker="o", label="Random Improve")
     plt.plot(x, df["greedy_local_improve_size"], marker="o",
@@ -228,6 +225,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    #main()
     plot_mis_times()
     plot_mis_sizes()
